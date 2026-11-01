@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An interactive graduated-cylinder model of the §1(h)(1) capital gains stacking order.">
+<style>[hidden] { display: none !important; }</style>
+<title>The §1(h) Cylinder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a lab bench. Beakers stand over the cylinder on the left; the worksheet that reads the scales sits on the right. */
+:root {
+  --bg: #eef2f4; --panel: #fbfcfd; --ink: #16242c; --muted: #566772; --line: #c8d3d9; --glass: #ffffff;
+  --accent: #14505f; --accent-ink: #ffffff; --warn-bg: #fdf0d5; --warn-ink: #6c4700; --bad: #b3261e; --good: #17694f;
+  --ancg: #16907b; --u1250: #cf7d12; --r28: #bd3676; --ord: #3f5fc4; --sump: #d9e0e4;
+  --display: "Archivo", system-ui, sans-serif; --body: "Archivo", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10181d; --panel: #18232a; --ink: #e6eef2; --muted: #9db0bb; --line: #33444e; --glass: #141e24;
+  --accent: #7fd0df; --accent-ink: #0b2228; --warn-bg: #3b2d0e; --warn-ink: #f6d58f; --bad: #ff9c94; --good: #72d6b3;
+  --ancg: #23ad95; --u1250: #e2962d; --r28: #d9568f; --ord: #6583e0; --sump: #26343c; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #10181d; --panel: #18232a; --ink: #e6eef2; --muted: #9db0bb; --line: #33444e; --glass: #141e24;
+  --accent: #7fd0df; --accent-ink: #0b2228; --warn-bg: #3b2d0e; --warn-ink: #f6d58f; --bad: #ff9c94; --good: #72d6b3;
+  --ancg: #23ad95; --u1250: #e2962d; --r28: #d9568f; --ord: #6583e0; --sump: #26343c; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); margin: 0; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; }
+header h1 { font: 800 clamp(28px, 4vw, 40px)/1.1 var(--display); margin: 0 0 6px; letter-spacing: -0.01em; text-wrap: balance; }
+header p { margin: 0; max-width: 68ch; color: var(--muted); }
+.bench { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 10fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.col { display: grid; gap: 14px; min-width: 0; }
+h2 { font: 600 12px/1.3 var(--body); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { font: 500 13px/1 var(--body); padding: 7px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+.beakers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 480px) { .beakers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.beaker { display: grid; gap: 5px; justify-items: stretch; min-width: 0; }
+.beaker .name { font-weight: 600; font-size: 13px; line-height: 1.2; min-height: 2.4em; }
+.vessel { position: relative; height: 66px; width: 62px; margin: 0 auto; border: 2px solid var(--muted); border-top: 0; border-radius: 0 0 7px 7px; background: var(--glass); overflow: hidden; transform-origin: 100% 0; transition: transform .25s; }
+.vessel.pouring { transform: rotate(14deg); }
+.vessel i { position: absolute; left: 0; right: 0; bottom: 0; }
+.beaker label { font-size: 12px; color: var(--muted); }
+.beaker input[type=number], .ded input { width: 100%; min-width: 0; font: 13px var(--mono); padding: 5px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); font-variant-numeric: tabular-nums; }
+.beaker input[type=range] { width: 100%; min-width: 0; margin: 0; }
+.ded { display: flex; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.ded input { width: 130px; }
+.ded select { min-width: 0; max-width: 100%; font: 13px var(--body); padding: 5px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); }
+.ded label { color: var(--muted); }
+.lawnote { margin: 0; color: var(--muted); font-size: 13.5px; }
+.subst { color: var(--accent); font-weight: 600; }
+#law { display: grid; gap: 10px; min-width: 0; }
+.terms { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+@media (max-width: 760px) { .terms { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.terms div { background: var(--panel); padding: 7px 10px; min-width: 0; }
+.terms dt { font-size: 12px; color: var(--muted); line-height: 1.25; }
+.terms dd { margin: 0; font: 600 14px var(--mono); font-variant-numeric: tabular-nums; }
+.clause { display: grid; grid-template-columns: 96px minmax(0, 3fr) minmax(0, 2fr); gap: 8px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; align-items: start; }
+.clause.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+@media (max-width: 760px) { .clause { grid-template-columns: minmax(0, 1fr); } }
+.clause h3 { margin: 0; font: 600 13px/1.35 var(--mono); }
+.body { display: grid; gap: 3px; min-width: 0; font-size: 14px; line-height: 1.4; }
+.ln { display: flex; justify-content: space-between; gap: 14px; min-width: 0; }
+.ln span { min-width: 0; }
+.ln b { font: 600 13px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ln.d1 { padding-left: 16px; } .ln.d2 { padding-left: 32px; }
+.math { display: grid; gap: 4px; min-width: 0; font: 12.5px/1.45 var(--mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+#cyl { width: 100%; height: auto; max-height: calc(100vh - 24px); display: block; }
+.scale-title { font: 600 11px var(--body); letter-spacing: 0.08em; }
+.tick { font: 12px var(--mono); }
+.liq { font: 600 12px var(--mono); paint-order: stroke; stroke-width: 3px; stroke: rgba(0,0,0,.45); fill: #fff; }
+
+.steps { display: grid; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.steps button { width: 100%; display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 8px; text-align: left; font: 14px/1.35 var(--body); padding: 8px 10px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
+.steps button b { font-weight: 600; }
+.steps button.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.steps button.done { color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { font: 600 14px var(--body); padding: 9px 14px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.say { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 11px 13px; min-height: 92px; }
+.say p { margin: 0; }
+
+.tblwrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { font: 600 11px var(--body); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); text-align: right; padding: 5px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+td { padding: 5px 6px; text-align: right; font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td:first-child { font-family: var(--body); font-size: 13.5px; white-space: normal; min-width: 120px; }
+tr.sub td { color: var(--muted); }
+tr.sub td:first-child { padding-left: 18px; font-size: 12.5px; }
+tr.pending td { opacity: .42; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; }
+.totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.totals div { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; min-width: 0; }
+.totals span { display: block; font-size: 12px; color: var(--muted); line-height: 1.25; }
+.totals strong { font: 600 clamp(14px, 1.7vw, 18px) var(--mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.totals .final { border-color: var(--accent); }
+.flag { font-size: 13.5px; padding: 8px 11px; border-radius: 4px; background: var(--warn-bg); color: var(--warn-ink); }
+.check { font-size: 13.5px; font-weight: 600; }
+.check.ok { color: var(--good); } .check.no { color: var(--bad); }
+footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
+footer p { margin: 0 0 6px; }
+@media (prefers-reduced-motion: reduce) { .vessel { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>The §1(h) Cylinder</h1>
+    <p>Pour four kinds of income into one cylinder, in the order §1(h)(1) sets. Each amount reads its rate from the left scale, the right scale, or a flat rate. The worksheet recomputes every amount from the statute's words and flags any difference.</p>
+  </header>
+
+  <div class="chips" id="scen" role="group" aria-label="Example scenarios"></div>
+
+  <div class="bench">
+    <div class="col">
+      <h2>Beakers (example figures)</h2>
+      <div class="beakers" id="beakers"></div>
+      <div class="ded"><label for="filing">Filing status</label><select id="filing"></select></div>
+      <div class="ded"><label for="ded">Deduction taken from ordinary income</label><input id="ded" type="number" min="0" step="1000"></div>
+      <svg id="cyl" viewBox="0 0 520 470" role="img" aria-label="Graduated cylinder showing income poured against ordinary and preferential rate scales"></svg>
+    </div>
+
+    <div class="col">
+      <h2>Pouring order</h2>
+      <ol class="steps" id="steps"></ol>
+      <div class="controls">
+        <button class="btn" id="reset">Empty the cylinder</button>
+        <button class="btn" id="back">Back</button>
+        <button class="btn primary" id="next">Pour next step</button>
+        <button class="btn" id="all">Pour everything</button>
+      </div>
+      <div class="say" id="say" aria-live="polite"></div>
+      <h2>Worksheet</h2>
+      <div class="tblwrap"><table><thead><tr><th>§1(h)(1)</th><th>Cylinder</th><th>Statute</th><th>Rate</th><th>Tax</th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="check" id="check"></div>
+      <div class="totals" id="totals"></div>
+      <div class="flag" id="flag" hidden></div>
+    </div>
+  </div>
+
+  <section class="col">
+    <h2>The statute with your numbers</h2>
+    <p class="lawnote">Text is §1(h)(1) as modified by §1(j)(5). <span class="subst">Marked words</span> are the §1(j)(5)(A) substitutions. The highlighted clause is the step you are on.</p>
+    <div id="law"></div>
+  </section>
+
+  <footer>
+    <p id="basis"></p>
+    <p>Each beaker holds an amount after capital gain and loss netting, so the net capital gain cap in (E)(i) never binds here. The model leaves out the §1(h)(2) investment interest election, the §1411 net investment income tax and AMT. This is a learning model, not a filing tool.</p>
+  </footer>
+</div>
+
+<script>
+// ENGINE START
+// Statutory base figures: brackets from §1(j)(2), zero and fifteen from §1(j)(5)(B).
+const FILING = {
+  single: { label: 'Single', cite: '§1(j)(2)(C)', zero: 38600, fifteen: 425800,
+    brackets: [[9525, .10], [38700, .12], [82500, .22], [157500, .24], [200000, .32], [500000, .35], [Infinity, .37]] },
+  joint: { label: 'Married filing jointly or surviving spouse', cite: '§1(j)(2)(A)', zero: 77200, fifteen: 479000,
+    brackets: [[19050, .10], [77400, .12], [165000, .22], [315000, .24], [400000, .32], [600000, .35], [Infinity, .37]] },
+  hoh: { label: 'Head of household', cite: '§1(j)(2)(B)', zero: 51700, fifteen: 452400,
+    brackets: [[13600, .10], [51800, .12], [82500, .22], [157500, .24], [200000, .32], [500000, .35], [Infinity, .37]] },
+  separate: { label: 'Married filing separately', cite: '§1(j)(2)(D)', zero: 38600, fifteen: 239500,
+    brackets: [[9525, .10], [38700, .12], [82500, .22], [157500, .24], [200000, .32], [300000, .35], [Infinity, .37]] },
+  estate: { label: 'Estate or trust', cite: '§1(j)(2)(E)', zero: 2600, fifteen: 12700,
+    brackets: [[2550, .10], [9150, .24], [12500, .35], [Infinity, .37]] },
+};
+for (const f of Object.values(FILING)) f.stop = f.brackets.filter(b => b[1] < .25).pop()[0];
+
+function regularTax(x, f) {
+  let tax = 0, low = 0;
+  for (const [top, rate] of f.brackets) {
+    if (x > low) tax += (Math.min(x, top) - low) * rate;
+    low = top;
+  }
+  return tax;
+}
+
+// The user's pouring procedure, as a physical simulation. The level can start below zero
+// when deductions exceed ordinary income; anything poured below zero is absorbed untaxed.
+function pour({ ordinary, deduction, u1250, r28, ancg }, f) {
+  const start = ordinary - deduction;
+  let level = Math.min(0, start);
+  const chunks = [];
+  const add = (key, step, amount) => {
+    if (amount > 0) { chunks.push({ key, step, amount, from: level, to: level + amount }); level += amount; }
+  };
+  add('ord', 1, Math.max(0, start));
+  const u1 = Math.min(u1250, Math.max(0, f.stop - level));
+  add('u1250', 1, u1);
+  const g1 = Math.min(r28, Math.max(0, f.stop - level));
+  add('r28', 1, g1);
+  const A = Math.max(0, level);
+  const nFrom = level;
+  add('ancg', 2, ancg);
+  const taxed = (lo, hi) => Math.max(0, Math.min(nFrom + ancg, hi) - Math.max(nFrom, lo, 0));
+  const B = taxed(0, f.zero), C = taxed(f.zero, f.fifteen), D = taxed(f.fifteen, Infinity);
+  const E = u1250 - u1, F = r28 - g1;
+  add('u1250', 3, E);
+  add('r28', 4, F);
+  return { start, chunks, top: level, A, B, C, D, E, F, inA: { u1250: u1, r28: g1 } };
+}
+
+// §1(h)(1)(A)-(F) read literally, with the §1(j)(5) substitutions. Shares no logic with pour().
+function statute({ ordinary, deduction, u1250, r28, ancg }, f) {
+  const NCG = u1250 + r28 + ancg;
+  const TI = Math.max(0, ordinary - deduction + NCG);
+  const below25 = Math.min(TI, f.stop);
+  const aI = TI - NCG, aII = TI - ancg;
+  const A = Math.max(0, Math.max(aI, Math.min(below25, aII)));
+  const nCap = Math.min(ancg, TI);
+  const belowZero = Math.min(TI, f.zero);
+  // (B)(ii) has no "not below zero" text; floored here as the IRS worksheet does.
+  const bII = Math.max(0, aII);
+  const B = Math.min(nCap, Math.max(0, belowZero - bII));
+  const belowFifteen = Math.min(TI, f.fifteen);
+  const C = Math.max(0, Math.min(nCap - B, belowFifteen - (A + B)));
+  const D = Math.max(0, nCap - B - C);
+  const eI = Math.min(u1250, NCG), eII = Math.max(0, A + NCG - TI);
+  const E = Math.max(0, eI - eII);
+  const F = Math.max(0, TI - A - B - C - D - E);
+  return { TI, NCG, A, B, C, D, E, F, below25, aI, aII, nCap, belowZero, bII, belowFifteen, eI, eII };
+}
+
+function computeTax({ A, B, C, D, E, F }, f) {
+  return { regA: regularTax(A, f), total: regularTax(A, f) + .15 * C + .20 * D + .25 * E + .28 * F };
+}
+// ENGINE END
+
+if (typeof document !== 'undefined') {
+  const $ = id => document.getElementById(id);
+  const fmt = n => (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
+  const fmt2 = n => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const BEAKERS = [
+    { key: 'ancg', name: 'ANCG (incl. qualified dividends)', short: 'ANCG' },
+    { key: 'u1250', name: 'Unrecaptured §1250 gain', short: '§1250' },
+    { key: 'r28', name: '28% rate gain', short: '28% gain' },
+    { key: 'ordinary', name: 'Ordinary income', short: 'Ordinary', color: 'ord' },
+  ];
+  const colorOf = k => `var(--${k === 'ord' || k === 'ordinary' ? 'ord' : k})`;
+  const STEPS = [
+    ['Step 1', '(A)', 'Ordinary income, then §1250 gain, then 28% gain, stopping at the 24% line. Left scale.'],
+    ['Step 2', '(B)–(D)', 'All ANCG, starting from the Step 1 level. Right scale.'],
+    ['Step 3', '(E)', 'Remaining §1250 gain. Flat 25%.'],
+    ['Step 4', '(F)', 'Remaining 28% gain. Flat 28%.'],
+  ];
+  const SCENARIOS = [
+    { name: 'Playground', ordinary: 100000, deduction: 0, u1250: 100000, r28: 200000, ancg: 300000 },
+    { name: '0% window opens', ordinary: 20000, deduction: 0, u1250: 5000, r28: 3000, ancg: 40000 },
+    { name: '24% line splits 28% gain', ordinary: 100000, deduction: 0, u1250: 30000, r28: 60000, ancg: 50000 },
+    { name: '24% line splits §1250', ordinary: 130000, deduction: 0, u1250: 50000, r28: 30000, ancg: 60000 },
+    { name: 'Ordinary fills past 24%', ordinary: 250000, deduction: 0, u1250: 40000, r28: 30000, ancg: 100000 },
+    { name: 'Regular tax wins', gap: true, deduction: 0, u1250: 0, r28: 0 },
+    { name: 'Deduction exceeds ordinary', ordinary: 5000, deduction: 15000, u1250: 20000, r28: 20000, ancg: 20000 },
+  ];
+
+  let input = { ...SCENARIOS[0] }, filing = 'single', model, law, timeline = [], t = 0, target = 0, stage = 4, raf = null, activeScenario = 0;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fil = () => FILING[filing];
+  const sizeOf = f => f.stop / FILING.single.stop;
+  // The stretch where ANCG pays 15% on the right scale but 12% on the left.
+  const gapOf = f => {
+    const twelve = f.brackets.find(b => b[1] === .12);
+    return twelve ? Math.max(0, twelve[0] - f.zero) : 0;
+  };
+  // Scenario figures are written for Single and resized so each keeps its shape under other statuses.
+  function loadScenario(i) {
+    const s = SCENARIOS[i], f = fil(), k = sizeOf(f), fit = v => Math.round(v * k / 10) * 10;
+    input = s.gap ? { ...s, ordinary: f.zero, ancg: gapOf(f) }
+      : { ...s, ordinary: fit(s.ordinary), deduction: fit(s.deduction), u1250: fit(s.u1250), r28: fit(s.r28), ancg: fit(s.ancg) };
+    activeScenario = i;
+  }
+
+  $('filing').innerHTML = Object.entries(FILING).map(([k, f]) => `<option value="${k}">${f.label}</option>`).join('');
+  $('filing').addEventListener('change', e => {
+    filing = e.target.value;
+    if (SCENARIOS[activeScenario]?.gap && !gapOf(fil())) activeScenario = 0;
+    if (activeScenario >= 0) loadScenario(activeScenario);
+    syncFields(); recompute(); setStage(stage, true);
+  });
+
+  $('scen').innerHTML = SCENARIOS.map((s, i) => `<button class="chip" id="scen${i}" aria-pressed="${i === 0}">${s.name}</button>`).join('');
+  SCENARIOS.forEach((s, i) => $('scen' + i).onclick = () => {
+    loadScenario(i); syncFields(); recompute(); setStage(4, true);
+  });
+
+  $('beakers').innerHTML = BEAKERS.map(b => `
+    <div class="beaker">
+      <div class="name">${b.name}</div>
+      <div class="vessel" id="v-${b.key}"><i id="f-${b.key}" style="background:${colorOf(b.key)}"></i></div>
+      <input id="n-${b.key}" type="number" min="0" step="1000" aria-label="${b.name} in dollars">
+      <input id="r-${b.key}" type="range" min="0" max="800000" step="1000" aria-label="${b.name} slider">
+    </div>`).join('');
+  $('steps').innerHTML = STEPS.map((s, i) => `<li><button id="st${i + 1}"><b>${s[0]}<br><small>${s[1]}</small></b><span>${s[2]}</span></button></li>`).join('');
+  STEPS.forEach((_, i) => $('st' + (i + 1)).onclick = () => setStage(i + 1));
+
+  function syncFields() {
+    const k = sizeOf(fil());
+    BEAKERS.forEach(b => {
+      const r = $('r-' + b.key);
+      r.max = Math.round(800000 * k); r.step = k < .5 ? 50 : 1000;
+      $('n-' + b.key).value = input[b.key]; r.value = input[b.key];
+    });
+    $('ded').value = input.deduction;
+    SCENARIOS.forEach((s, i) => {
+      $('scen' + i).setAttribute('aria-pressed', i === activeScenario);
+      $('scen' + i).hidden = !!s.gap && !gapOf(fil());
+    });
+    const f = fil();
+    $('basis').textContent = `Figures are the statutory base amounts with no inflation adjustment. ${f.label}: brackets from ${f.cite}, a maximum zero rate amount of ${fmt(f.zero)} and a maximum 15-percent rate amount of ${fmt(f.fifteen)} under §1(j)(5)(B).`;
+  }
+  const edit = (key, raw) => {
+    input[key] = Math.max(0, Number(raw) || 0); activeScenario = -1; syncFields(); recompute(); setStage(stage, true);
+  };
+  BEAKERS.forEach(b => {
+    $('n-' + b.key).addEventListener('input', e => { input[b.key] = Math.max(0, Number(e.target.value) || 0); activeScenario = -1; $('r-' + b.key).value = input[b.key]; SCENARIOS.forEach((_, i) => $('scen' + i).setAttribute('aria-pressed', false)); recompute(); setStage(stage, true); });
+    $('r-' + b.key).addEventListener('input', e => edit(b.key, e.target.value));
+  });
+  $('ded').addEventListener('input', e => { input.deduction = Math.max(0, Number(e.target.value) || 0); activeScenario = -1; SCENARIOS.forEach((_, i) => $('scen' + i).setAttribute('aria-pressed', false)); recompute(); setStage(stage, true); });
+
+  function recompute() {
+    model = pour(input, fil()); law = statute(input, fil()); timeline = model.chunks;
+  }
+  const endOfStage = s => timeline.filter(c => c.step <= s).length;
+
+  function setStage(s, instant) {
+    stage = s; target = endOfStage(s);
+    if (instant || reduced) { t = target; paint(); return; }
+    paint();
+    if (raf) return;
+    let last = performance.now();
+    const tick = now => {
+      const dt = (now - last) / 800; last = now;
+      t = t < target ? Math.min(target, t + dt) : Math.max(target, t - dt * 2);
+      paint();
+      raf = t === target ? null : requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }
+  $('next').onclick = () => setStage(Math.min(4, stage + 1));
+  $('back').onclick = () => setStage(Math.max(0, stage - 1));
+  $('all').onclick = () => setStage(4);
+  $('reset').onclick = () => setStage(0);
+
+  function pouredOf(i) { return Math.max(0, Math.min(1, t - i)); }
+
+  function viewMax() {
+    const top = Math.max(model.top, 1);
+    for (const m of [5000, 10000, 15000, 20000, 30000, 40000, 60000, 120000, 200000, 300000, 500000, 800000, 1000000, 1500000, 2000000, 3000000, 5000000]) if (m >= top * 1.04) return m;
+    return top * 1.1;
+  }
+
+  function scale(side, items, vTop, y, active, x0, base) {
+    const pts = [];
+    let low = 0;
+    for (const [top, text] of items) {
+      const at = Math.min(top, vTop);
+      if (low < vTop) pts.push({ v: at, trueY: y(at), text: top > vTop ? text + ' ↑' : text });
+      low = top;
+    }
+    let prev = base;
+    pts.forEach(p => { p.y = Math.min(p.trueY, prev - 15); prev = p.y; });
+    const left = side === 'left', dir = left ? -1 : 1;
+    const color = active ? 'var(--ink)' : 'var(--muted)', op = active ? 1 : .55;
+    return pts.map(p => {
+      const a = x0 + dir * 8, b = x0 + dir * 22;
+      return `<g opacity="${op}"><polyline points="${x0},${p.trueY} ${a},${p.trueY} ${b},${p.y}" fill="none" stroke="${color}"/>
+        <text class="tick" x="${x0 + dir * 26}" y="${p.y + 4}" text-anchor="${left ? 'end' : 'start'}" fill="${color}">${p.text}</text></g>`;
+    }).join('');
+  }
+
+  function paint() {
+    const W0 = 182, W1 = 338, yB = 446, yT = 42, H = 470, f = fil();
+    const vMin = Math.min(0, model.start), vTop = viewMax();
+    const y = v => yB - (v - vMin) / (vTop - vMin) * (yB - yT);
+    const cur = timeline[Math.min(Math.floor(t), timeline.length - 1)];
+    const moving = t !== target;
+    const step = moving && cur ? cur.step : stage;
+    let s = '';
+    s += `<text class="scale-title" x="${W0 - 6}" y="16" text-anchor="end" fill="${step === 1 ? 'var(--ink)' : 'var(--muted)'}">LEFT · ORDINARY</text>`;
+    s += `<text class="scale-title" x="${W1 + 6}" y="16" fill="${step === 2 ? 'var(--ink)' : 'var(--muted)'}">RIGHT · PREFERENTIAL</text>`;
+    s += `<rect x="${W0}" y="${yT - 8}" width="${W1 - W0}" height="${yB - yT + 8}" fill="var(--glass)"/>`;
+    if (vMin < 0) s += `<rect x="${W0}" y="${y(0)}" width="${W1 - W0}" height="${yB - y(0)}" fill="var(--sump)"/>`;
+    let pour_top = vMin;
+    timeline.forEach((c, i) => {
+      const f = pouredOf(i);
+      if (!f) return;
+      const to = c.from + c.amount * f;
+      pour_top = to;
+      // Liquid below $0 is faded: it is offset by the deduction and never reaches taxable income.
+      const parts = [[c.from, Math.min(0, to), .35, 'untaxed'], [Math.max(0, c.from), to, 1, BEAKERS.find(b => (b.color || b.key) === c.key).short]];
+      parts.forEach(([lo, hi, op, name]) => {
+        if (hi <= lo) return;
+        const h = y(lo) - y(hi);
+        s += `<rect x="${W0}" y="${y(hi)}" width="${W1 - W0}" height="${Math.max(h, .5)}" fill="${colorOf(c.key)}" fill-opacity="${op}"/>`;
+        if (h > 19 && f === 1) s += `<text class="liq" x="${(W0 + W1) / 2}" y="${(y(lo) + y(hi)) / 2 + 4}" text-anchor="middle">${name} ${fmt(hi - lo)}</text>`;
+      });
+    });
+    if (moving && cur) s += `<rect x="${(W0 + W1) / 2 - 4}" y="${yT - 34}" width="8" height="${Math.max(0, y(pour_top) - yT + 34)}" fill="${colorOf(cur.key)}"/>`;
+    const lines = (arr, c, dash) => arr.filter(v => v > 0 && v < vTop).map(v => `<line x1="${W0}" x2="${W1}" y1="${y(v)}" y2="${y(v)}" stroke="${c}" stroke-opacity=".5" ${dash ? 'stroke-dasharray="3 4"' : ''}/>`).join('');
+    s += lines(f.brackets.map(b => b[0]).filter(v => v !== f.stop), 'var(--muted)', true);
+    s += lines([f.zero, f.fifteen], 'var(--muted)', false);
+    if (f.stop < vTop) s += `<line x1="${W0 - 8}" x2="${W1}" y1="${y(f.stop)}" y2="${y(f.stop)}" stroke="var(--ink)" stroke-width="2"/>`;
+    s += `<line x1="${W0}" x2="${W1}" y1="${y(0)}" y2="${y(0)}" stroke="var(--ink)"/>`;
+    const noteY = Math.min(y(0) + 18, H - 50);
+    s += `<path d="M${W0 - 6} ${yT - 12} H${W0} V${yB} H${W1} V${yT - 12} H${W1 + 6}" fill="none" stroke="var(--muted)" stroke-width="2.5"/>`;
+    s += scale('left', f.brackets.map(([top, r]) => [top, `${Math.round(r * 100)}%${top === Infinity ? ' above' : ' to ' + fmt(top)}`]), vTop, y, step === 1, W0, vMin < 0 ? noteY - 1 : y(0) + 10);
+    s += scale('right', [[f.zero, '0% to ' + fmt(f.zero)], [f.fifteen, '15% to ' + fmt(f.fifteen)], [Infinity, '20% above']], vTop, y, step === 2, W1, vMin < 0 ? y(0) - 2 : y(0) + 10);
+    if (vMin < 0) {
+      s += `<line x1="${W0 - 8}" x2="${W0}" y1="${y(0)}" y2="${y(0)}" stroke="var(--ink)"/><line x1="${W1}" x2="${W1 + 8}" y1="${y(0)}" y2="${y(0)}" stroke="var(--ink)"/>`;
+      s += `<text class="tick" x="${W1 + 12}" y="${y(0) + 4}" fill="var(--ink)">$0 taxable income</text>`;
+      [`Deduction exceeds`, `ordinary income by`, `${fmt(-vMin)}. Income`, `poured here is untaxed.`].forEach((text, i) =>
+        s += `<text class="tick" x="${W0 - 12}" y="${noteY + i * 14}" text-anchor="end" fill="var(--muted)">${text}</text>`);
+    }
+    $('cyl').innerHTML = s;
+
+    const left = { ancg: input.ancg, u1250: input.u1250, r28: input.r28, ord: Math.max(0, input.ordinary - input.deduction) };
+    timeline.forEach((c, i) => left[c.key] -= c.amount * pouredOf(i));
+    const cap = Math.max(input.ancg, input.u1250, input.r28, Math.max(0, input.ordinary - input.deduction), 1);
+    BEAKERS.forEach(b => {
+      const k = b.color || b.key;
+      $('f-' + b.key).style.height = (left[k] / cap * 100) + '%';
+      $('v-' + b.key).classList.toggle('pouring', moving && cur && cur.key === k);
+    });
+    STEPS.forEach((_, i) => {
+      const el = $('st' + (i + 1));
+      el.className = i + 1 === stage ? 'on' : i + 1 < stage ? 'done' : '';
+    });
+    $('back').disabled = stage === 0; $('next').disabled = stage === 4;
+    say(); ledger();
+    if (!moving) lawView();
+  }
+
+  // The statute's words as amended by §1(j)(5), filled in from statute(), not from the cylinder.
+  function lawView() {
+    const L = law, f = fil(), I = input, tax = computeTax(L, f), reg = regularTax(L.TI, f);
+    const sub = t => `<span class="subst" title="Substituted by §1(j)(5)(A)">${t}</span>`;
+    const line = (depth, text, value) => `<div class="ln d${depth}"><span>${text}</span>${value === undefined ? '' : `<b>${fmt(value)}</b>`}</div>`;
+    const clause = (st, cite, body, math) => `<article class="clause ${st === stage ? 'on' : ''}"><h3>${cite}</h3><div class="body">${body}</div><div class="math">${math.map(m => `<div>${m}</div>`).join('')}</div></article>`;
+    const terms = [
+      ['Taxable income (TI)', L.TI], ['Net capital gain (NCG)', L.NCG], ['Adjusted net capital gain (ANCG)', I.ancg],
+      ['Unrecaptured §1250 gain', I.u1250], ['28-percent rate gain', I.r28],
+      ['Maximum zero rate amount', f.zero], ['Maximum 15-percent rate amount', f.fifteen], ['Top of the 24% bracket', f.stop],
+    ];
+    const sum = L.A + L.B + L.C + L.D + L.E;
+    $('law').innerHTML = `<dl class="terms">${terms.map(([k, v]) => `<div><dt>${k}</dt><dd>${fmt(v)}</dd></div>`).join('')}</dl>` +
+      clause(1, '§1(h)(1)(A)',
+        line(0, 'a tax computed at the rates and in the same manner as if this subsection had not been enacted on the greater of—') +
+        line(1, '(i) taxable income reduced by the net capital gain; or', L.aI) +
+        line(1, '(ii) the lesser of—') +
+        line(2, '(I) the amount of taxable income taxed at a rate below 25 percent; or', L.below25) +
+        line(2, '(II) taxable income reduced by the adjusted net capital gain;', L.aII),
+        [`(A) = max(${fmt(L.aI)}, min(${fmt(L.below25)}, ${fmt(L.aII)})) = <b>${fmt(L.A)}</b>${L.aI < 0 && L.aII < 0 ? ' (no tax base below $0)' : ''}`,
+         `Ordinary rates on ${fmt(L.A)} = <b>${fmt2(tax.regA)}</b>`]) +
+      clause(2, '§1(h)(1)(B)',
+        line(0, '0 percent of so much of the adjusted net capital gain (or, if less, taxable income)', L.nCap) +
+        line(0, 'as does not exceed the excess (if any) of—') +
+        line(1, `(i) the amount of taxable income ${sub('below the maximum zero rate amount')}, over`, L.belowZero) +
+        line(1, `(ii) the taxable income reduced by the adjusted net capital gain;${L.aII < 0 ? ' (floored at $0, as on the IRS worksheet)' : ''}`, L.bII),
+        [`(B) = min(${fmt(L.nCap)}, max(0, ${fmt(L.belowZero)} − ${fmt(L.bII)})) = <b>${fmt(L.B)}</b>`, `0% × ${fmt(L.B)} = <b>$0.00</b>`]) +
+      clause(2, '§1(h)(1)(C)',
+        line(0, '15 percent of the lesser of—') +
+        line(1, '(i) so much of the adjusted net capital gain (or, if less, taxable income) as exceeds the amount on which a tax is determined under subparagraph (B), or', L.nCap - L.B) +
+        line(1, '(ii) the excess of—') +
+        line(2, `(I) the amount of taxable income ${sub('below the maximum 15-percent rate amount')}, over`, L.belowFifteen) +
+        line(2, '(II) the sum of the amounts on which a tax is determined under subparagraphs (A) and (B),', L.A + L.B),
+        [`(C) = min(${fmt(L.nCap - L.B)}, max(0, ${fmt(L.belowFifteen)} − ${fmt(L.A + L.B)})) = <b>${fmt(L.C)}</b>`, `15% × ${fmt(L.C)} = <b>${fmt2(.15 * L.C)}</b>`]) +
+      clause(2, '§1(h)(1)(D)',
+        line(0, '20 percent of the adjusted net capital gain (or, if less, taxable income)', L.nCap) +
+        line(0, 'in excess of the sum of the amounts on which tax is determined under subparagraphs (B) and (C),', L.B + L.C),
+        [`(D) = ${fmt(L.nCap)} − ${fmt(L.B + L.C)} = <b>${fmt(L.D)}</b>`, `20% × ${fmt(L.D)} = <b>${fmt2(.20 * L.D)}</b>`]) +
+      clause(3, '§1(h)(1)(E)',
+        line(0, '25 percent of the excess (if any) of—') +
+        line(1, '(i) the unrecaptured section 1250 gain (or, if less, the net capital gain (determined without regard to paragraph (11))), over', L.eI) +
+        line(1, '(ii) the excess (if any) of—') +
+        line(2, '(I) the sum of the amount on which tax is determined under subparagraph (A) plus the net capital gain, over', L.A + L.NCG) +
+        line(2, '(II) taxable income; and', L.TI),
+        [`(E) = max(0, ${fmt(L.eI)} − max(0, ${fmt(L.A + L.NCG)} − ${fmt(L.TI)})) = <b>${fmt(L.E)}</b>`, `25% × ${fmt(L.E)} = <b>${fmt2(.25 * L.E)}</b>`]) +
+      clause(4, '§1(h)(1)(F)',
+        line(0, '28 percent of the amount of taxable income', L.TI) +
+        line(0, 'in excess of the sum of the amounts on which tax is determined under the preceding subparagraphs of this paragraph.', sum),
+        [`(F) = ${fmt(L.TI)} − ${fmt(sum)} = <b>${fmt(L.F)}</b>`, `28% × ${fmt(L.F)} = <b>${fmt2(.28 * L.F)}</b>`]) +
+      clause(4, '§1(h)(1), opening words',
+        line(0, 'If a taxpayer has a net capital gain for any taxable year, the tax imposed by this section for such taxable year shall not exceed the sum of—'),
+        [`Sum of (A)–(F) = <b>${fmt2(tax.total)}</b>`, `Tax owed = min(${fmt2(reg)}, ${fmt2(tax.total)}) = <b>${fmt2(L.NCG > 0 ? Math.min(reg, tax.total) : reg)}</b>`]);
+  }
+
+  function say() {
+    const m = model, f = fil(), stopLine = fmt(f.stop), I = input;
+    const text = [
+      `The cylinder is empty. ${m.start < 0 ? `The deduction exceeds ordinary income, so the level starts ${fmt(-m.start)} below zero. Gain poured into that space is never taxed.` : 'Pour the first step to begin.'}`,
+      m.start >= f.stop
+        ? `Ordinary income alone reaches ${fmt(m.start)}, at or past the ${stopLine} line. §1(h)(1)(A)(i) controls and no gain is poured in Step 1. The level is ${fmt(m.A)}.`
+        : m.inA.u1250 + m.inA.r28 === I.u1250 + I.r28
+          ? `All ordinary income, §1250 gain and 28% gain went in, and the level ${m.A >= f.stop ? 'landed on' : 'stayed below'} the ${stopLine} line at ${fmt(m.A)}. §1(h)(1)(A) taxes that ${fmt(m.A)} at the left scale, so these gains may pay less than their 25% and 28% maximums.`
+          : `The ${stopLine} line was reached. ${fmt(m.inA.u1250)} of §1250 gain and ${fmt(m.inA.r28)} of 28% gain went in at the left scale. The rest waits for Steps 3 and 4.`,
+      `ANCG sits on top of the Step 1 level, ahead of any remaining §1250 and 28% gain: ${fmt(m.B)} at 0%, ${fmt(m.C)} at 15%, ${fmt(m.D)} at 20%.${m.A >= f.zero ? ` The Step 1 level of ${fmt(m.A)} is already at or above the ${fmt(f.zero)} line, so no ANCG reaches 0%.` : ` The Step 1 level of ${fmt(m.A)} is below the ${fmt(f.zero)} line, so ${fmt(Math.min(f.zero - m.A, I.ancg))} of room was open at 0%.`}`,
+      `§1(h)(1)(E)(ii) reduces §1250 gain by what Step 1 already took: (A) + net capital gain − taxable income = ${fmt(Math.max(0, law.A + law.NCG - law.TI))}. That leaves ${fmt(m.E)} at 25%, whatever the level.`,
+      `§1(h)(1)(F) sweeps up the last of taxable income. ${fmt(m.F)} of 28% gain pays 28%. The level ends at ${fmt(Math.max(0, m.top))}, which equals taxable income.`,
+    ];
+    $('say').innerHTML = `<p>${text[stage]}</p>`;
+  }
+
+  function ledger() {
+    const m = model, f = fil(), rA = regularTax(m.A, f);
+    const row = (label, key, rate, tax, st, sub) => {
+      const cyl = m[key], lw = law[key];
+      return `<tr class="${st > stage ? 'pending' : ''}"><td>${label}</td><td>${fmt(cyl)}</td><td>${fmt(lw)}</td><td>${rate}</td><td>${fmt2(tax)}</td></tr>`;
+    };
+    const subrow = (k, label, amt) => amt > 0 ? `<tr class="sub ${1 > stage ? 'pending' : ''}"><td><span class="dot" style="background:${colorOf(k)}"></span>${label}</td><td>${fmt(amt)}</td><td></td><td></td><td></td></tr>` : '';
+    $('rows').innerHTML =
+      row('(A) Level after Step 1', 'A', 'left scale', rA, 1) +
+      subrow('ord', 'Ordinary income', Math.max(0, m.start)) +
+      subrow('u1250', '§1250 gain', m.inA.u1250) +
+      subrow('r28', '28% gain', m.inA.r28) +
+      (m.start < 0 && m.inA.u1250 + m.inA.r28 > 0 ? `<tr class="sub ${1 > stage ? 'pending' : ''}"><td>Less excess deduction</td><td>${fmt(-Math.min(-m.start, m.inA.u1250 + m.inA.r28))}</td><td></td><td></td><td></td></tr>` : '') +
+      row('(B) ANCG at 0%', 'B', '0%', 0, 2) +
+      row('(C) ANCG at 15%', 'C', '15%', .15 * m.C, 2) +
+      row('(D) ANCG at 20%', 'D', '20%', .20 * m.D, 2) +
+      row('(E) §1250 gain left', 'E', '25%', .25 * m.E, 3) +
+      row('(F) 28% gain left', 'F', '28%', .28 * m.F, 4);
+
+    const same = ['A', 'B', 'C', 'D', 'E', 'F'].every(k => Math.abs(m[k] - law[k]) < .005);
+    $('check').className = 'check ' + (same ? 'ok' : 'no');
+    $('check').textContent = same ? 'Cylinder matches the statute on every line.' : 'Cylinder and statute disagree. See the lines above.';
+    const alt = computeTax(m, f).total, reg = regularTax(law.TI, f), final = law.NCG > 0 ? Math.min(alt, reg) : reg;
+    $('totals').innerHTML = `<div><span>§1(h) tax</span><strong>${fmt2(alt)}</strong></div>
+      <div><span>Regular tax on ${fmt(law.TI)}</span><strong>${fmt2(reg)}</strong></div>
+      <div class="final"><span>Tax owed (lower)</span><strong>${fmt2(final)}</strong></div>`;
+    const flag = $('flag');
+    flag.hidden = !(alt > reg + .005);
+    if (!flag.hidden) flag.textContent = `§1(h)(1) says the tax "shall not exceed" this sum, so it is only a ceiling. Here it comes to ${fmt2(alt - reg)} more than regular tax, so regular tax applies. ANCG between ${fmt(f.zero)} and ${fmt(f.zero + gapOf(f))} pays 15% on the right scale but only 12% on the left.`;
+  }
+
+  syncFields(); recompute(); setStage(4, true);
+}
+</script>
+</body>
+</html>
